@@ -26,7 +26,11 @@ import Scenarist from 'cnr.ist';
 import { createInterface } from 'node:readline';
 import { stdin as input, stdout as output } from 'node:process';
 
-const { $ } = new Scenarist ( [] );
+const { $ } = new Scenarist ( Object .assign ( [], {
+
+undefined: 'Oops'
+
+} ) );
 
 createInterface ( { input, output, prompt: ': ' } )
 .on ( 'line', function calculate ( argv ) {

@@ -67,8 +67,6 @@ export default class Scenarist {
 
 #scenario;
 #player;
-#location;
-#setting; 
 #plot = {};
 
 //-==
@@ -98,8 +96,6 @@ if ( argv .length && Scenarist .#stamp !== argv .shift () )
 throw Error ( 'Scenarist .prototype .constructor Only 1 argument is accepted' );
 
 this .#player = argv .shift ();
-this .#location = argv .shift ();
-this .#setting = argv;
 this .$ = Scenarist .#$ .bind ( this );
 
 }; // constructor
@@ -115,6 +111,15 @@ The `#$` static private function acts as director for `Scenarist`.
 //+==
 
 static #$ ( ... argv ) {
+
+let location;
+
+if ( argv [ 0 ] === Scenarist .#stamp ) {
+
+argv .shift ();
+location = argv .shift ();
+
+}
 
 //-==
 ```
@@ -138,19 +143,8 @@ In case of `object` scenarios, each property found within this `object` can be a
 
 case 'object':
 
-let location = argv .shift ();
-let setting = [];
-let scenario;
-
-if ( typeof this .#scenario [ '$_' + location ] !== 'function' )
-scenario = this .#scenario [ location ];
-
-else {
-
-setting .push ( this .$ );
-scenario = this .#scenario [ location = '$_' + location ];
-
-}
+let direction = argv .shift ();
+let scenario = this .#scenario [ Object .hasOwn ( this .#scenario, direction ) ? direction : undefined ];
 
 //-==
 ```
@@ -158,15 +152,18 @@ scenario = this .#scenario [ location = '$_' + location ];
 If the inner scenario is playable,
 meaning that it is either an object or function,
 then control is given to the director of the inner scenario;
-to feature Scenarist with its recursive nature
-(since this inner scenario may have its own ineer scenarios and so forth):
+featuring Scenarist with its recursive nature
+(since this inner scenario may also have its own inner ones, and so forth):
 
 ```js
 //+==
 
 if ( Scenarist .#playable .includes ( typeof scenario ) )
-return ( this .#plot [ scenario ] = this .#plot [ scenario ] || new Scenarist ( scenario, Scenarist .#stamp, this, location, ... setting ) )
-.$ ( ... argv );
+return (
+
+this .#plot [ scenario ] = this .#plot [ scenario ] || new this .constructor ( scenario, Scenarist .#stamp, this )
+
+) .$ ( Scenarist .#stamp, direction, ... argv );
 
 //-==
 ```
@@ -182,7 +179,7 @@ const action = argv .shift ();
 if ( ! this [ '$$' + action ] )
 throw Error ( 'Scenarist .this .$ Unknown action' );
 
-return this [ '$$' + action ] ( location, ... argv );
+return this [ '$$' + action ] ( direction, ... argv );
 
 //-==
 ```
@@ -195,7 +192,7 @@ return this [ '$$' + action ] ( location, ... argv );
 case 'function':
 
 if ( this .#player )
-return this .#player .#scenario [ this .#location ] ( ... this .#setting, ... argv );
+return this .#player .#scenario [ location ] ( ... argv );
 
 return this .#scenario ( ... argv );
 

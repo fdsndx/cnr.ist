@@ -4,8 +4,6 @@ export default class Scenarist {
 
 #scenario;
 #player;
-#location;
-#setting; 
 #plot = {};
 
 
@@ -21,8 +19,6 @@ if ( argv .length && Scenarist .#stamp !== argv .shift () )
 throw Error ( 'Scenarist .prototype .constructor Only 1 argument is accepted' );
 
 this .#player = argv .shift ();
-this .#location = argv .shift ();
-this .#setting = argv;
 this .$ = Scenarist .#$ .bind ( this );
 
 }; // constructor
@@ -30,30 +26,31 @@ this .$ = Scenarist .#$ .bind ( this );
 
 static #$ ( ... argv ) {
 
+let location;
+
+if ( argv [ 0 ] === Scenarist .#stamp ) {
+
+argv .shift ();
+location = argv .shift ();
+
+}
+
 
 switch ( typeof this .#scenario ) {
 
 
 case 'object':
 
-let location = argv .shift ();
-let setting = [];
-let scenario;
-
-if ( typeof this .#scenario [ '$_' + location ] !== 'function' )
-scenario = this .#scenario [ location ];
-
-else {
-
-setting .push ( this .$ );
-scenario = this .#scenario [ location = '$_' + location ];
-
-}
+let direction = argv .shift ();
+let scenario = this .#scenario [ Object .hasOwn ( this .#scenario, direction ) ? direction : undefined ];
 
 
 if ( Scenarist .#playable .includes ( typeof scenario ) )
-return ( this .#plot [ scenario ] = this .#plot [ scenario ] || new Scenarist ( scenario, Scenarist .#stamp, this, location, ... setting ) )
-.$ ( ... argv );
+return (
+
+this .#plot [ scenario ] = this .#plot [ scenario ] || new this .constructor ( scenario, Scenarist .#stamp, this )
+
+) .$ ( Scenarist .#stamp, direction, ... argv );
 
 
 if ( ! argv .length )
@@ -64,13 +61,13 @@ const action = argv .shift ();
 if ( ! this [ '$$' + action ] )
 throw Error ( 'Scenarist .this .$ Unknown action' );
 
-return this [ '$$' + action ] ( location, ... argv );
+return this [ '$$' + action ] ( direction, ... argv );
 
 
 case 'function':
 
 if ( this .#player )
-return this .#player .#scenario [ this .#location ] ( ... this .#setting, ... argv );
+return this .#player .#scenario [ location ] ( ... argv );
 
 return this .#scenario ( ... argv );
 
